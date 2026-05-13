@@ -644,7 +644,7 @@ textarea {
     border-radius: 10px !important;
   }
 
-  ..columna-gasto h3 {
+  .columna-gasto h3 {
   font-size: clamp(6px, 1.8vw, 8px) !important;
 
   white-space: nowrap !important;
