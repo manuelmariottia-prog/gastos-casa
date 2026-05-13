@@ -652,14 +652,19 @@ textarea {
     word-break: break-word !important;
   }
 
-  .columna-gasto p {
-    height: 30px !important;
-    font-size: 9px !important;
-    line-height: 1.05 !important;
-    padding: 0 !important;
-    overflow-wrap: anywhere !important;
-    word-break: break-word !important;
-  }
+ .columna-gasto p {
+  height: 30px !important;
+  font-size: clamp(7px, 2vw, 10px) !important;
+  line-height: 1 !important;
+  padding: 0 2px !important;
+
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
 
   .columna-editar h3 {
     height: auto !important;
