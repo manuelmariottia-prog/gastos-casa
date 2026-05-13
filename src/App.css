@@ -261,8 +261,8 @@ textarea {
   grid-template-columns: 110px 180px 220px 100px 120px 70px;
   gap: 10px;
   align-items: start;
-  overflow-x: auto;
-  padding-bottom: 8px;
+  overflow: hidden;
+  width: 100%;
 }
 
 .columna-gasto {
@@ -275,10 +275,14 @@ textarea {
 }
 
 .columna-gasto h3 {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
   text-transform: uppercase;
   color: var(--text-soft);
-  margin-bottom: 12px;
+  margin-bottom: 0;
   letter-spacing: 0.4px;
   text-align: center;
 }
@@ -293,7 +297,10 @@ textarea {
   font-size: 14px;
   font-weight: 400;
   border-bottom: 1px solid rgba(0,0,0,0.05);
-  overflow-wrap: anywhere;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .columna-gasto p:last-child {
@@ -301,32 +308,41 @@ textarea {
 }
 
 .columna-editar {
+  display: flex;
+  flex-direction: column;
   align-items: center;
 }
 
 .columna-editar h3 {
   height: 36px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0;
 }
 
 .boton-editar-tabla {
-  border: none;
-  width: 30px;
+  width: 100%;
   height: 36px;
-  border-radius: 10px;
-  background: var(--green);
-  color: white;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: bold;
+  border: none;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1px;
-  padding: 0;
+  cursor: pointer;
+}
+
+.boton-editar-tabla::before {
+  content: "✎";
+  width: 24px;
+  height: 24px;
+  background: var(--green);
+  color: white;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
 }
 
 .modal-fondo {
@@ -458,8 +474,18 @@ textarea {
 }
 
 @media (max-width: 900px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   .app {
-    padding: 14px;
+    width: 100%;
+    max-width: 100%;
+    padding: 8px;
   }
 
   .header {
@@ -468,9 +494,8 @@ textarea {
   }
 
   .header h1 {
-    font-size: 42px;
+    font-size: 34px;
     line-height: 1.05;
-    word-break: break-word;
   }
 
   .subtitulo {
@@ -495,18 +520,69 @@ textarea {
   }
 
   .card {
-    padding: 20px;
-    border-radius: 24px;
+    padding: 12px;
+    border-radius: 22px;
   }
 
   .card h2 {
-    font-size: 32px;
+    font-size: 30px;
   }
 
   .panel-formulario h2,
-  .panel-derecho h2 {
-    font-size: 24px;
+  .panel-derecho h2,
+  .listado-header h2 {
+    font-size: 22px;
     text-align: center;
+  }
+
+  .listado-header p {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .listado-columnas {
+    grid-template-columns:
+      minmax(42px, 0.7fr)
+      minmax(70px, 1fr)
+      minmax(72px, 1.1fr)
+      minmax(44px, 0.55fr)
+      minmax(56px, 0.85fr)
+      40px;
+
+    gap: 4px;
+  }
+
+  .columna-gasto {
+    padding: 6px 4px;
+    border-radius: 10px;
+  }
+
+  .columna-gasto h3 {
+    height: 24px;
+    font-size: clamp(6px, 1.8vw, 8px);
+    margin-bottom: 0;
+    letter-spacing: 0;
+  }
+
+  .columna-gasto p {
+    height: 30px;
+    font-size: clamp(7px, 2vw, 10px);
+    line-height: 1;
+    padding: 0 2px;
+  }
+
+  .columna-editar h3 {
+    height: 24px;
+  }
+
+  .boton-editar-tabla {
+    height: 30px;
+  }
+
+  .boton-editar-tabla::before {
+    width: clamp(16px, 4.5vw, 22px);
+    height: clamp(16px, 4.5vw, 22px);
+    font-size: clamp(8px, 2.2vw, 11px);
   }
 
   .login-card {
@@ -516,245 +592,91 @@ textarea {
   .login-buttons {
     flex-direction: column;
   }
-
-  .listado-columnas {
-    grid-template-columns: 80px 130px 140px 70px 85px 50px;
-    gap: 8px;
-    overflow-x: auto;
-  }
-
-  .columna-gasto {
-    padding: 10px;
-  }
-
-  .columna-gasto h3 {
-    font-size: 10px;
-  }
-
-  .columna-gasto p {
-    font-size: 12px;
-    height: 32px;
-  }
-
-  .boton-editar-tabla {
-    width: 24px;
-    height: 32px;
-    font-size: 10px;
-  }
 }
 
-@media (max-width: 900px) {
-  html,
-  body,
-  #root {
-    width: 100vw;
-    max-width: 100vw;
-    overflow-x: hidden !important;
-  }
-
-  .app {
-    width: 100vw;
-    max-width: 100vw;
-    padding: 12px !important;
-    overflow-x: hidden !important;
-  }
-
-  .card,
-  .main-grid,
-  .panel-derecho,
-  .resumen-grid,
-  .header,
-  .header-info {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .listado-card {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto !important;
-    overflow-y: hidden;
-  }
-
-  .listado-columnas {
-    width: max-content !important;
-    min-width: max-content !important;
-    max-width: none !important;
-    overflow: visible !important;
-  }
-
-  .grafico-categorias,
-  .barra-item,
-  .barra-fondo {
-    max-width: 100%;
-    overflow: hidden;
-  }
+.boton-editar-tabla {
+  color: transparent;
+  font-size: 0;
 }
 
-@media (max-width: 900px) {
-  html,
-  body,
-  #root {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden !important;
-  }
-
-  .app {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 8px !important;
-    overflow-x: hidden !important;
-  }
-
-  .card {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 12px !important;
-    overflow: hidden !important;
-  }
-
-  .listado-card {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-  }
-
-  .listado-columnas {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    display: grid !important;
-    grid-template-columns:
-  minmax(42px, 0.7fr)
-  minmax(70px, 1fr)
-  minmax(72px, 1.1fr)
-  minmax(44px, 0.55fr)
-  minmax(56px, 0.85fr)
-  40px !important;
-    gap: 4px !important;
-    overflow: hidden !important;
-  }
-
-  .columna-gasto {
-    min-width: 0 !important;
-    width: 100% !important;
-    padding: 6px 4px !important;
-    border-radius: 10px !important;
-  }
-
-  .columna-gasto h3 {
-  font-size: clamp(6px, 1.8vw, 8px) !important;
-
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-
-  line-height: 1 !important;
-  letter-spacing: 0 !important;
-
-  text-align: center !important;
-
-  margin-bottom: 6px !important;
-}
-
- .columna-gasto p {
-  height: 30px !important;
-  font-size: clamp(7px, 2vw, 10px) !important;
-  line-height: 1 !important;
-  padding: 0 2px !important;
-
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-
-  overflow-wrap: normal !important;
-  word-break: normal !important;
-}
-
-  .columna-editar h3 {
-    height: auto !important;
-    min-height: 20px !important;
-  }
-
-  .boton-editar-tabla {
-    width: 22px !important;
-    height: 30px !important;
-    min-width: 22px !important;
-    font-size: 10px !important;
-    border-radius: 7px !important;
-  }
-
-  .listado-header h2 {
-    font-size: 22px !important;
-    text-align: center;
-  }
-
-  .listado-header p {
-    font-size: 12px !important;
-    text-align: center;
-  }
+.boton-editar-tabla::before {
+  color: white;
 }
 
 @media (min-width: 901px) {
   .listado-card {
-    overflow: hidden !important;
+    overflow: visible;
   }
 
   .listado-columnas {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
     grid-template-columns:
       0.9fr
       1.3fr
       1.8fr
       0.8fr
       1fr
-      60px !important;
-
-    overflow: hidden !important;
+      60px;
   }
-
-  .columna-gasto {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .columna-gasto p {
-    overflow-wrap: break-word;
-    word-break: break-word;
-  }
-}
-.columna-editar {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-}
-
-.columna-editar h3 {
-  height: 36px !important;
-  margin-bottom: 12px !important;
-}
-
-.columna-editar .boton-editar-tabla {
-  height: 36px !important;
-  width: 30px !important;
-  margin: 0 auto !important;
 }
 
 @media (max-width: 900px) {
-  .columna-editar h3 {
-    height: 30px !important;
-    margin-bottom: 6px !important;
+  .listado-card {
+    overflow: hidden;
   }
 
-  .columna-editar .boton-editar-tabla {
-    height: 30px !important;
-    width: 28px !important;
-    margin: 0 auto !important;
+  .listado-columnas {
+    overflow: hidden;
+  }
+
+  .boton-editar-tabla {
+    color: transparent !important;
+    font-size: 0 !important;
   }
 }
 
+.columna-gasto p {
+  padding: 0 4px;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+@media (max-width: 900px) {
+  .columna-gasto {
+    padding: 6px 6px;
+  }
+
+  .columna-gasto p {
+    padding: 0 1px;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: nowrap !important;
+    font-size: clamp(6px, 1.75vw, 9px) !important;
+  }
+
+  .columna-gasto h3 {
+    overflow: visible !important;
+    text-overflow: unset !important;
+    font-size: clamp(6px, 1.7vw, 8px) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .listado-columnas {
+    grid-template-columns:
+      minmax(42px, 0.65fr)
+      minmax(82px, 1.35fr)
+      minmax(68px, 1fr)
+      minmax(42px, 0.55fr)
+      minmax(52px, 0.75fr)
+      40px !important;
+  }
+
+  .columna-gasto p {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+}
