@@ -1,0 +1,587 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #f8f5f2;
+  --card: #fffdfb;
+  --primary: #a8c3a6;
+  --secondary: #e8ddd3;
+  --accent: #f4c7ab;
+  --text: #4b4b4b;
+  --muted: #7a7a7a;
+  --line: #eee6df;
+  --soft: #f6f1ec;
+  --danger: #e88d7a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px 36px;
+}
+
+.header {
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 13px;
+  margin: 0;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.subtitulo {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.tabs-meses {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+.tab-mes {
+  white-space: nowrap;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: var(--card);
+  color: var(--text);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+}
+
+.tab-mes.activa {
+  background: var(--primary);
+  color: white;
+}
+
+.resumen-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.resumen-grid .card:first-child {
+  grid-column: 1 / -1;
+  background: var(--primary);
+  color: white;
+}
+
+.resumen-grid .card:first-child p,
+.resumen-grid .card:first-child h2 {
+  color: white;
+}
+
+.card {
+  background: var(--secondary);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.card h2 {
+  margin: 0 0 14px;
+  font-weight: 800;
+}
+
+.card > p {
+  margin-top: 0;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.panel-formulario {
+  position: sticky;
+  top: 20px;
+}
+
+.panel-derecho {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+  align-items: start;
+  min-width: 0;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.formulario input,
+.formulario select {
+  padding: 13px;
+  border-radius: 14px;
+  border: 1px solid #ece7e2;
+  font-size: 14px;
+  font-family: 'Montserrat', sans-serif;
+  background: white;
+  color: var(--text);
+}
+
+.formulario input:focus,
+.formulario select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.formulario button {
+  padding: 15px;
+  border: none;
+  border-radius: 16px;
+  background: var(--primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+}
+
+.usuario-carga {
+  background: var(--soft);
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 14px;
+}
+
+.grafico-categorias {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.barra-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barra-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.barra-fondo {
+  height: 13px;
+  background: var(--soft);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barra-relleno {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.texto-vacio {
+  color: var(--muted);
+}
+
+.listado-card {
+  min-width: 0;
+}
+
+.listado-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.listado-header h2 {
+  margin-bottom: 4px;
+}
+
+.listado-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.lista-gastos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 520px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+
+.fila-gasto {
+  display: grid;
+  grid-template-columns: 120px 170px minmax(220px, 1fr) 90px 140px 44px;
+  gap: 14px;
+  align-items: center;
+  background: #faf7f4;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px 16px;
+  width: 100%;
+}
+
+.fila-gasto .dato {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fila-gasto span {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fila-gasto strong {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.fila-gasto .monto strong {
+  font-size: 16px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.boton-editar-tabla {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 12px;
+  background: var(--primary);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(75, 75, 75, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 100;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--card);
+  border-radius: 28px;
+  padding: 26px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.18);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 8px 0 0;
+}
+
+.boton-cerrar {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 14px;
+  background: var(--soft);
+  color: var(--text);
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.modal-acciones {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.formulario .boton-eliminar {
+  background: var(--danger);
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.login-card {
+  background: var(--card);
+  border-radius: 30px;
+  padding: 42px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.05);
+}
+
+.login-card h1 {
+  margin: 12px 0;
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.login-card p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.login-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.login-buttons button,
+.boton-sesion {
+  padding: 16px;
+  border: none;
+  border-radius: 18px;
+  background: var(--primary);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+}
+
+.boton-sesion {
+  height: fit-content;
+}
+
+@media (max-width: 1000px) {
+  .app {
+    padding: 12px 8px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .header-info {
+    align-items: center;
+  }
+
+  .header h1 {
+    font-size: 28px;
+  }
+
+  .subtitulo {
+    font-size: 12px;
+  }
+
+  .boton-sesion {
+    width: 100%;
+    max-width: 240px;
+  }
+
+  .tabs-meses {
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+  }
+
+  .tab-mes {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .resumen-grid,
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .card h2 {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  .card p {
+    font-size: 11px;
+  }
+
+  .panel-formulario {
+    position: static;
+  }
+
+  .formulario {
+    gap: 8px;
+  }
+
+  .formulario label {
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .formulario input,
+  .formulario select {
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+
+  .formulario button {
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+
+  .usuario-carga {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .listado-header {
+    margin-bottom: 8px;
+  }
+
+  .listado-header h2 {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+
+  .listado-header p {
+    font-size: 11px;
+  }
+
+  .lista-gastos {
+    gap: 6px;
+    max-height: none;
+    padding-right: 0;
+  }
+
+  .fila-gasto {
+    grid-template-columns: 1fr 1fr 34px;
+    gap: 4px 8px;
+    padding: 7px 9px;
+    border-radius: 12px;
+  }
+
+  .fila-gasto .detalle {
+    grid-column: span 2;
+  }
+
+  .fila-gasto span {
+    font-size: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .fila-gasto strong {
+    font-size: 11px;
+    line-height: 1.05;
+  }
+
+  .fila-gasto .monto strong {
+    font-size: 12px;
+  }
+
+  .boton-editar-tabla {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+    border-radius: 8px;
+    align-self: center;
+    justify-self: end;
+  }
+
+  .grafico-categorias {
+    gap: 10px;
+  }
+
+  .barra-info {
+    font-size: 11px;
+  }
+
+  .barra-fondo {
+    height: 8px;
+  }
+}
