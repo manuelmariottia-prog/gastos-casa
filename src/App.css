@@ -627,12 +627,12 @@ textarea {
     min-width: 0 !important;
     display: grid !important;
     grid-template-columns:
-      minmax(38px, 0.7fr)
-      minmax(58px, 1fr)
-      minmax(64px, 1.1fr)
-      minmax(36px, 0.55fr)
-      minmax(54px, 0.85fr)
-      26px !important;
+  minmax(42px, 0.7fr)
+  minmax(70px, 1fr)
+  minmax(72px, 1.1fr)
+  minmax(44px, 0.55fr)
+  minmax(56px, 0.85fr)
+  40px !important;
     gap: 4px !important;
     overflow: hidden !important;
   }
@@ -644,13 +644,20 @@ textarea {
     border-radius: 10px !important;
   }
 
-  .columna-gasto h3 {
-    font-size: 7px !important;
-    line-height: 1.1 !important;
-    margin-bottom: 6px !important;
-    letter-spacing: 0 !important;
-    word-break: break-word !important;
-  }
+  ..columna-gasto h3 {
+  font-size: clamp(6px, 1.8vw, 8px) !important;
+
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+
+  text-align: center !important;
+
+  margin-bottom: 6px !important;
+}
 
  .columna-gasto p {
   height: 30px !important;
@@ -721,3 +728,33 @@ textarea {
     word-break: break-word;
   }
 }
+.columna-editar {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.columna-editar h3 {
+  height: 36px !important;
+  margin-bottom: 12px !important;
+}
+
+.columna-editar .boton-editar-tabla {
+  height: 36px !important;
+  width: 30px !important;
+  margin: 0 auto !important;
+}
+
+@media (max-width: 900px) {
+  .columna-editar h3 {
+    height: 30px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .columna-editar .boton-editar-tabla {
+    height: 30px !important;
+    width: 28px !important;
+    margin: 0 auto !important;
+  }
+}
+
