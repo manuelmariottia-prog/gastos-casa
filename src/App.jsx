@@ -3,7 +3,7 @@ import "./App.css";
 
 const PERSONAS = ["Manu", "Sofi"];
 
-const DESCRIPCIONES = [
+const CATEGORIAS_INICIALES = [
   "Supermercado",
   "Mercadito",
   "Vinoteca",
@@ -28,6 +28,11 @@ function formatoMoneda(valor) {
   }).format(valor || 0);
 }
 
+function formatoFecha(fecha) {
+  const [anio, mes, dia] = fecha.split("-");
+  return `${dia}/${mes}/${anio.slice(2)}`;
+}
+
 function obtenerClaveMes(fecha) {
   return fecha.slice(0, 7);
 }
@@ -41,111 +46,19 @@ function obtenerMesActual() {
   return new Date().toISOString().slice(0, 7);
 }
 
-const gastosIniciales = [
-  {
-    id: 1,
-    fecha: "2026-05-12",
-    descripcion: "Supermercado",
-    detalle: "Compra semanal",
-    monto: 45000,
-    pago: "Manu",
-  },
-  {
-    id: 2,
-    fecha: "2026-05-11",
-    descripcion: "Servicios",
-    detalle: "Internet",
-    monto: 28000,
-    pago: "Sofi",
-  },
-  {
-    id: 3,
-    fecha: "2026-05-08",
-    descripcion: "Mercadito",
-    detalle: "Verduras y almacén",
-    monto: 18500,
-    pago: "Sofi",
-  },
-  {
-    id: 4,
-    fecha: "2026-05-05",
-    descripcion: "Vinoteca",
-    detalle: "Bebidas para cena",
-    monto: 22000,
-    pago: "Manu",
-  },
-  {
-    id: 5,
-    fecha: "2026-04-28",
-    descripcion: "Alquiler",
-    detalle: "Alquiler departamento",
-    monto: 420000,
-    pago: "Manu",
-  },
-  {
-    id: 6,
-    fecha: "2026-04-22",
-    descripcion: "Consorcio",
-    detalle: "Expensas abril",
-    monto: 78000,
-    pago: "Sofi",
-  },
-  {
-    id: 7,
-    fecha: "2026-04-18",
-    descripcion: "Impuestos",
-    detalle: "Municipal",
-    monto: 16500,
-    pago: "Manu",
-  },
-  {
-    id: 8,
-    fecha: "2026-04-12",
-    descripcion: "Pedidos comida",
-    detalle: "Cena del viernes",
-    monto: 31000,
-    pago: "Sofi",
-  },
-  {
-    id: 9,
-    fecha: "2026-03-26",
-    descripcion: "Servicios",
-    detalle: "Luz y gas",
-    monto: 52000,
-    pago: "Manu",
-  },
-  {
-    id: 10,
-    fecha: "2026-03-20",
-    descripcion: "Mercadito",
-    detalle: "Compras chicas",
-    monto: 14500,
-    pago: "Sofi",
-  },
-  {
-    id: 11,
-    fecha: "2026-03-14",
-    descripcion: "Supermercado",
-    detalle: "Compra mensual",
-    monto: 96000,
-    pago: "Manu",
-  },
-  {
-    id: 12,
-    fecha: "2026-03-09",
-    descripcion: "Vinoteca",
-    detalle: "Regalo y bebidas",
-    monto: 27500,
-    pago: "Sofi",
-  },
-];
-
 export default function App() {
   const [usuarioActivo, setUsuarioActivo] = useState("");
 
+  const [categorias, setCategorias] = useState(() => {
+    const guardadas = localStorage.getItem("categorias-casa");
+    return guardadas ? JSON.parse(guardadas) : CATEGORIAS_INICIALES;
+  });
+
+  const [nuevaCategoria, setNuevaCategoria] = useState("");
+
   const [gastos, setGastos] = useState(() => {
     const guardados = localStorage.getItem("gastos-casa");
-    return guardados ? JSON.parse(guardados) : gastosIniciales;
+    return guardados ? JSON.parse(guardados) : [];
   });
 
   const [mesActivo, setMesActivo] = useState(obtenerMesActual());
@@ -153,14 +66,14 @@ export default function App() {
 
   const [formulario, setFormulario] = useState({
     fecha: new Date().toISOString().slice(0, 10),
-    descripcion: "Supermercado",
+    descripcion: categorias[0],
     detalle: "",
     monto: "",
   });
 
   const [formularioEdicion, setFormularioEdicion] = useState({
     fecha: "",
-    descripcion: "Supermercado",
+    descripcion: categorias[0],
     detalle: "",
     monto: "",
     pago: "Manu",
@@ -170,10 +83,13 @@ export default function App() {
     localStorage.setItem("gastos-casa", JSON.stringify(gastos));
   }, [gastos]);
 
+  useEffect(() => {
+    localStorage.setItem("categorias-casa", JSON.stringify(categorias));
+  }, [categorias]);
+
   const mesesDisponibles = useMemo(() => {
     const meses = gastos.map((gasto) => obtenerClaveMes(gasto.fecha));
-    const mesesUnicos = Array.from(new Set([...meses, obtenerMesActual()]));
-    return mesesUnicos.sort().reverse();
+    return Array.from(new Set([...meses, obtenerMesActual()])).sort().reverse();
   }, [gastos]);
 
   const gastosDelMes = useMemo(() => {
@@ -181,18 +97,21 @@ export default function App() {
   }, [gastos, mesActivo]);
 
   const resumen = useMemo(() => {
-    const total = gastosDelMes.reduce((acc, gasto) => acc + Number(gasto.monto), 0);
+    const total = gastosDelMes.reduce(
+      (acc, gasto) => acc + Number(gasto.monto),
+      0
+    );
 
     const pagado = { Manu: 0, Sofi: 0 };
-    const categorias = {};
+    const categoriasResumen = {};
 
     gastosDelMes.forEach((gasto) => {
       pagado[gasto.pago] += Number(gasto.monto);
-      categorias[gasto.descripcion] =
-        (categorias[gasto.descripcion] || 0) + Number(gasto.monto);
+      categoriasResumen[gasto.descripcion] =
+        (categoriasResumen[gasto.descripcion] || 0) + Number(gasto.monto);
     });
 
-    const gastosPorCategoria = Object.entries(categorias)
+    const gastosPorCategoria = Object.entries(categoriasResumen)
       .map(([categoria, total]) => ({ categoria, total }))
       .sort((a, b) => b.total - a.total);
 
@@ -201,20 +120,58 @@ export default function App() {
 
   function cambiarFormulario(e) {
     const { name, value } = e.target;
-    setFormulario((prev) => ({ ...prev, [name]: value }));
 
-    if (name === "fecha") {
-      setMesActivo(obtenerClaveMes(value));
+    setFormulario((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (name === "descripcion" && value !== "__nueva__") {
+      setNuevaCategoria("");
     }
   }
 
   function cambiarFormularioEdicion(e) {
     const { name, value } = e.target;
-    setFormularioEdicion((prev) => ({ ...prev, [name]: value }));
+
+    setFormularioEdicion((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  function agregarCategoria() {
+    const categoriaLimpia = nuevaCategoria.trim();
+
+    if (!categoriaLimpia) return;
+
+    const yaExiste = categorias.some(
+      (categoria) =>
+        categoria.toLowerCase() === categoriaLimpia.toLowerCase()
+    );
+
+    if (yaExiste) {
+      alert("Esa categoría ya existe.");
+      return;
+    }
+
+    setCategorias((prev) => [...prev, categoriaLimpia]);
+
+    setFormulario((prev) => ({
+      ...prev,
+      descripcion: categoriaLimpia,
+    }));
+
+    setNuevaCategoria("");
   }
 
   function agregarGasto(e) {
     e.preventDefault();
+
+    if (formulario.descripcion === "__nueva__") {
+      alert("Primero guardá la nueva categoría.");
+      return;
+    }
 
     if (!formulario.monto || Number(formulario.monto) <= 0) return;
 
@@ -222,13 +179,12 @@ export default function App() {
       id: Date.now(),
       fecha: formulario.fecha,
       descripcion: formulario.descripcion,
-      detalle: formulario.detalle.trim(),
+      detalle: formulario.detalle,
       monto: Number(formulario.monto),
       pago: usuarioActivo,
     };
 
     setGastos((prev) => [nuevoGasto, ...prev]);
-    setMesActivo(obtenerClaveMes(formulario.fecha));
 
     setFormulario((prev) => ({
       ...prev,
@@ -239,6 +195,7 @@ export default function App() {
 
   function abrirEdicion(gasto) {
     setGastoEditando(gasto);
+
     setFormularioEdicion({
       fecha: gasto.fecha,
       descripcion: gasto.descripcion,
@@ -251,42 +208,37 @@ export default function App() {
   function guardarEdicion(e) {
     e.preventDefault();
 
-    if (!formularioEdicion.monto || Number(formularioEdicion.monto) <= 0) return;
-
     setGastos((prev) =>
       prev.map((gasto) =>
         gasto.id === gastoEditando.id
           ? {
               ...gasto,
-              fecha: formularioEdicion.fecha,
-              descripcion: formularioEdicion.descripcion,
-              detalle: formularioEdicion.detalle.trim(),
+              ...formularioEdicion,
               monto: Number(formularioEdicion.monto),
-              pago: formularioEdicion.pago,
             }
           : gasto
       )
     );
 
-    setMesActivo(obtenerClaveMes(formularioEdicion.fecha));
     setGastoEditando(null);
   }
 
   function eliminarGastoEditado() {
-    setGastos((prev) => prev.filter((gasto) => gasto.id !== gastoEditando.id));
-    setGastoEditando(null);
-  }
+    setGastos((prev) =>
+      prev.filter((gasto) => gasto.id !== gastoEditando.id)
+    );
 
-  function cerrarSesion() {
-    setUsuarioActivo("");
+    setGastoEditando(null);
   }
 
   if (!usuarioActivo) {
     return (
       <div className="login-page">
         <div className="login-card">
-          <p className="eyebrow">Gastos compartidos del hogar</p>
+          <p className="eyebrow">GASTOS COMPARTIDOS DEL HOGAR</p>
+
           <h1>¿Quién está usando la app?</h1>
+
           <p>Elegí tu usuario para cargar gastos automáticamente a tu nombre.</p>
 
           <div className="login-buttons">
@@ -305,14 +257,16 @@ export default function App() {
     <div className="app">
       <header className="header">
         <div className="header-info">
-          <p className="eyebrow">Gastos compartidos del hogar</p>
-          <h1>Sofi y Manu</h1>
+          <p className="eyebrow">GASTOS COMPARTIDOS DEL HOGAR</p>
+
+          <h1>SOFI Y MANU</h1>
+
           <p className="subtitulo">
             Estás cargando gastos como <strong>{usuarioActivo}</strong>.
           </p>
         </div>
 
-        <button className="boton-sesion" onClick={cerrarSesion}>
+        <button className="boton-sesion" onClick={() => setUsuarioActivo("")}>
           Cambiar usuario
         </button>
       </header>
@@ -353,17 +307,47 @@ export default function App() {
           <form onSubmit={agregarGasto} className="formulario">
             <label>
               Fecha
-              <input type="date" name="fecha" value={formulario.fecha} onChange={cambiarFormulario} />
+              <input
+                type="date"
+                name="fecha"
+                value={formulario.fecha}
+                onChange={cambiarFormulario}
+              />
             </label>
 
             <label>
               Descripción
-              <select name="descripcion" value={formulario.descripcion} onChange={cambiarFormulario}>
-                {DESCRIPCIONES.map((descripcion) => (
-                  <option key={descripcion} value={descripcion}>{descripcion}</option>
+              <select
+                name="descripcion"
+                value={formulario.descripcion}
+                onChange={cambiarFormulario}
+              >
+                {categorias.map((categoria) => (
+                  <option key={categoria} value={categoria}>
+                    {categoria}
+                  </option>
                 ))}
+
+                <option value="__nueva__">➕ Agregar nueva categoría</option>
               </select>
             </label>
+
+            {formulario.descripcion === "__nueva__" && (
+              <>
+                <label>
+                  Nueva categoría
+                  <input
+                    type="text"
+                    value={nuevaCategoria}
+                    onChange={(e) => setNuevaCategoria(e.target.value)}
+                  />
+                </label>
+
+                <button type="button" onClick={agregarCategoria}>
+                  Guardar categoría
+                </button>
+              </>
+            )}
 
             <label>
               Detalle opcional
@@ -378,7 +362,13 @@ export default function App() {
 
             <label>
               Monto
-              <input type="number" name="monto" value={formulario.monto} onChange={cambiarFormulario} placeholder="0" />
+              <input
+                type="number"
+                name="monto"
+                value={formulario.monto}
+                onChange={cambiarFormulario}
+                placeholder="0"
+              />
             </label>
 
             <div className="usuario-carga">
@@ -394,7 +384,9 @@ export default function App() {
             <h2>Gráfico por categoría</h2>
 
             {resumen.gastosPorCategoria.length === 0 ? (
-              <p className="texto-vacio">Todavía no hay gastos cargados este mes.</p>
+              <p className="texto-vacio">
+                Todavía no hay gastos cargados este mes.
+              </p>
             ) : (
               <div className="grafico-categorias">
                 {resumen.gastosPorCategoria.map((item) => (
@@ -408,7 +400,11 @@ export default function App() {
                       <div
                         className="barra-relleno"
                         style={{
-                          width: `${resumen.total ? (item.total / resumen.total) * 100 : 0}%`,
+                          width: `${
+                            resumen.total
+                              ? (item.total / resumen.total) * 100
+                              : 0
+                          }%`,
                         }}
                       />
                     </div>
@@ -422,46 +418,75 @@ export default function App() {
             <div className="listado-header">
               <div>
                 <h2>Listado de gastos</h2>
-                <p>{gastosDelMes.length} gastos cargados en {obtenerNombreMes(mesActivo)}</p>
+
+                <p>
+                  {gastosDelMes.length} gastos cargados en{" "}
+                  {obtenerNombreMes(mesActivo)}
+                </p>
               </div>
             </div>
 
             {gastosDelMes.length === 0 ? (
-              <p className="texto-vacio">No hay gastos cargados para este mes.</p>
+              <p className="texto-vacio">
+                No hay gastos cargados para este mes.
+              </p>
             ) : (
-              <div className="lista-gastos">
-                {gastosDelMes.map((gasto) => (
-                  <div className="fila-gasto" key={gasto.id}>
-                    <div className="dato fecha">
-                      <span>Fecha</span>
-                      <strong>{gasto.fecha}</strong>
-                    </div>
+              <div className="listado-columnas">
+                <div className="columna-gasto">
+                  <h3>Fecha</h3>
+                  {gastosDelMes.map((gasto) => (
+                    <p key={`fecha-${gasto.id}`}>
+                      {formatoFecha(gasto.fecha)}
+                    </p>
+                  ))}
+                </div>
 
-                    <div className="dato descripcion">
-                      <span>Descripción</span>
-                      <strong>{gasto.descripcion}</strong>
-                    </div>
+                <div className="columna-gasto">
+                  <h3>Descripción</h3>
+                  {gastosDelMes.map((gasto) => (
+                    <p key={`descripcion-${gasto.id}`}>
+                      {gasto.descripcion}
+                    </p>
+                  ))}
+                </div>
 
-                    <div className="dato detalle">
-                      <span>Detalle</span>
-                      <strong>{gasto.detalle || "-"}</strong>
-                    </div>
+                <div className="columna-gasto columna-detalle">
+                  <h3>Detalle</h3>
+                  {gastosDelMes.map((gasto) => (
+                    <p key={`detalle-${gasto.id}`}>
+                      {gasto.detalle || "-"}
+                    </p>
+                  ))}
+                </div>
 
-                    <div className="dato pago">
-                      <span>Pagó</span>
-                      <strong>{gasto.pago}</strong>
-                    </div>
+                <div className="columna-gasto">
+                  <h3>Pagó</h3>
+                  {gastosDelMes.map((gasto) => (
+                    <p key={`pago-${gasto.id}`}>{gasto.pago}</p>
+                  ))}
+                </div>
 
-                    <div className="dato monto">
-                      <span>Monto</span>
-                      <strong>{formatoMoneda(gasto.monto)}</strong>
-                    </div>
+                <div className="columna-gasto">
+                  <h3>Monto</h3>
+                  {gastosDelMes.map((gasto) => (
+                    <p key={`monto-${gasto.id}`}>
+                      {formatoMoneda(gasto.monto)}
+                    </p>
+                  ))}
+                </div>
 
-                    <button className="boton-editar-tabla" onClick={() => abrirEdicion(gasto)}>
+                <div className="columna-gasto columna-editar">
+                  <h3>Editar</h3>
+                  {gastosDelMes.map((gasto) => (
+                    <button
+                      key={`editar-${gasto.id}`}
+                      className="boton-editar-tabla"
+                      onClick={() => abrirEdicion(gasto)}
+                    >
                       ✎
                     </button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -477,7 +502,10 @@ export default function App() {
                 <h2>Modificar registro</h2>
               </div>
 
-              <button className="boton-cerrar" onClick={() => setGastoEditando(null)}>
+              <button
+                className="boton-cerrar"
+                onClick={() => setGastoEditando(null)}
+              >
                 ×
               </button>
             </div>
@@ -485,40 +513,72 @@ export default function App() {
             <form onSubmit={guardarEdicion} className="formulario">
               <label>
                 Fecha
-                <input type="date" name="fecha" value={formularioEdicion.fecha} onChange={cambiarFormularioEdicion} />
+                <input
+                  type="date"
+                  name="fecha"
+                  value={formularioEdicion.fecha}
+                  onChange={cambiarFormularioEdicion}
+                />
               </label>
 
               <label>
                 Descripción
-                <select name="descripcion" value={formularioEdicion.descripcion} onChange={cambiarFormularioEdicion}>
-                  {DESCRIPCIONES.map((descripcion) => (
-                    <option key={descripcion} value={descripcion}>{descripcion}</option>
+                <select
+                  name="descripcion"
+                  value={formularioEdicion.descripcion}
+                  onChange={cambiarFormularioEdicion}
+                >
+                  {categorias.map((categoria) => (
+                    <option key={categoria} value={categoria}>
+                      {categoria}
+                    </option>
                   ))}
                 </select>
               </label>
 
               <label>
                 Detalle
-                <input type="text" name="detalle" value={formularioEdicion.detalle} onChange={cambiarFormularioEdicion} />
+                <input
+                  type="text"
+                  name="detalle"
+                  value={formularioEdicion.detalle}
+                  onChange={cambiarFormularioEdicion}
+                />
               </label>
 
               <label>
                 Monto
-                <input type="number" name="monto" value={formularioEdicion.monto} onChange={cambiarFormularioEdicion} />
+                <input
+                  type="number"
+                  name="monto"
+                  value={formularioEdicion.monto}
+                  onChange={cambiarFormularioEdicion}
+                />
               </label>
 
               <label>
                 Pagó
-                <select name="pago" value={formularioEdicion.pago} onChange={cambiarFormularioEdicion}>
+                <select
+                  name="pago"
+                  value={formularioEdicion.pago}
+                  onChange={cambiarFormularioEdicion}
+                >
                   {PERSONAS.map((persona) => (
-                    <option key={persona} value={persona}>{persona}</option>
+                    <option key={persona} value={persona}>
+                      {persona}
+                    </option>
                   ))}
                 </select>
               </label>
 
               <div className="modal-acciones">
                 <button type="submit">Guardar cambios</button>
-                <button type="button" className="boton-eliminar" onClick={eliminarGastoEditado}>
+
+                <button
+                  type="button"
+                  className="boton-eliminar"
+                  onClick={eliminarGastoEditado}
+                >
                   Borrar gasto
                 </button>
               </div>
