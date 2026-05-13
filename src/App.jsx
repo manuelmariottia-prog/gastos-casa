@@ -1,4 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+
+import { db } from "./firebase";
 import "./App.css";
 
 const PERSONAS = ["Manu", "Sofi"];
@@ -48,44 +61,61 @@ function obtenerMesActual() {
 
 export default function App() {
   const [usuarioActivo, setUsuarioActivo] = useState("");
-
-  const [categorias, setCategorias] = useState(() => {
-    const guardadas = localStorage.getItem("categorias-casa");
-    return guardadas ? JSON.parse(guardadas) : CATEGORIAS_INICIALES;
-  });
-
+  const [categorias, setCategorias] = useState(CATEGORIAS_INICIALES);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
-
-  const [gastos, setGastos] = useState(() => {
-    const guardados = localStorage.getItem("gastos-casa");
-    return guardados ? JSON.parse(guardados) : [];
-  });
-
+  const [gastos, setGastos] = useState([]);
   const [mesActivo, setMesActivo] = useState(obtenerMesActual());
   const [gastoEditando, setGastoEditando] = useState(null);
 
   const [formulario, setFormulario] = useState({
     fecha: new Date().toISOString().slice(0, 10),
-    descripcion: categorias[0],
+    descripcion: CATEGORIAS_INICIALES[0],
     detalle: "",
     monto: "",
   });
 
   const [formularioEdicion, setFormularioEdicion] = useState({
     fecha: "",
-    descripcion: categorias[0],
+    descripcion: CATEGORIAS_INICIALES[0],
     detalle: "",
     monto: "",
     pago: "Manu",
   });
 
   useEffect(() => {
-    localStorage.setItem("gastos-casa", JSON.stringify(gastos));
-  }, [gastos]);
+    const q = query(collection(db, "gastos"), orderBy("fecha", "desc"));
+
+    const cancelarEscucha = onSnapshot(q, (snapshot) => {
+      const gastosFirebase = snapshot.docs.map((documento) => ({
+        id: documento.id,
+        ...documento.data(),
+      }));
+
+      setGastos(gastosFirebase);
+    });
+
+    return () => cancelarEscucha();
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("categorias-casa", JSON.stringify(categorias));
-  }, [categorias]);
+    const referenciaCategorias = doc(db, "configuracion", "categorias");
+
+    const cancelarEscucha = onSnapshot(referenciaCategorias, (documento) => {
+      if (documento.exists()) {
+        const data = documento.data();
+
+        if (Array.isArray(data.lista) && data.lista.length > 0) {
+          setCategorias(data.lista);
+        }
+      } else {
+        setDoc(referenciaCategorias, {
+          lista: CATEGORIAS_INICIALES,
+        });
+      }
+    });
+
+    return () => cancelarEscucha();
+  }, []);
 
   const mesesDisponibles = useMemo(() => {
     const meses = gastos.map((gasto) => obtenerClaveMes(gasto.fecha));
@@ -129,6 +159,10 @@ export default function App() {
     if (name === "descripcion" && value !== "__nueva__") {
       setNuevaCategoria("");
     }
+
+    if (name === "fecha") {
+      setMesActivo(obtenerClaveMes(value));
+    }
   }
 
   function cambiarFormularioEdicion(e) {
@@ -140,7 +174,7 @@ export default function App() {
     }));
   }
 
-  function agregarCategoria() {
+  async function agregarCategoria() {
     const categoriaLimpia = nuevaCategoria.trim();
 
     if (!categoriaLimpia) return;
@@ -155,7 +189,11 @@ export default function App() {
       return;
     }
 
-    setCategorias((prev) => [...prev, categoriaLimpia]);
+    const nuevasCategorias = [...categorias, categoriaLimpia];
+
+    await setDoc(doc(db, "configuracion", "categorias"), {
+      lista: nuevasCategorias,
+    });
 
     setFormulario((prev) => ({
       ...prev,
@@ -165,7 +203,7 @@ export default function App() {
     setNuevaCategoria("");
   }
 
-  function agregarGasto(e) {
+  async function agregarGasto(e) {
     e.preventDefault();
 
     if (formulario.descripcion === "__nueva__") {
@@ -176,15 +214,17 @@ export default function App() {
     if (!formulario.monto || Number(formulario.monto) <= 0) return;
 
     const nuevoGasto = {
-      id: Date.now(),
       fecha: formulario.fecha,
       descripcion: formulario.descripcion,
-      detalle: formulario.detalle,
+      detalle: formulario.detalle.trim(),
       monto: Number(formulario.monto),
       pago: usuarioActivo,
+      creadoEn: new Date().toISOString(),
     };
 
-    setGastos((prev) => [nuevoGasto, ...prev]);
+    await addDoc(collection(db, "gastos"), nuevoGasto);
+
+    setMesActivo(obtenerClaveMes(formulario.fecha));
 
     setFormulario((prev) => ({
       ...prev,
@@ -199,35 +239,34 @@ export default function App() {
     setFormularioEdicion({
       fecha: gasto.fecha,
       descripcion: gasto.descripcion,
-      detalle: gasto.detalle,
+      detalle: gasto.detalle || "",
       monto: gasto.monto,
       pago: gasto.pago,
     });
   }
 
-  function guardarEdicion(e) {
+  async function guardarEdicion(e) {
     e.preventDefault();
 
-    setGastos((prev) =>
-      prev.map((gasto) =>
-        gasto.id === gastoEditando.id
-          ? {
-              ...gasto,
-              ...formularioEdicion,
-              monto: Number(formularioEdicion.monto),
-            }
-          : gasto
-      )
-    );
+    if (!gastoEditando) return;
 
+    await updateDoc(doc(db, "gastos", gastoEditando.id), {
+      fecha: formularioEdicion.fecha,
+      descripcion: formularioEdicion.descripcion,
+      detalle: formularioEdicion.detalle.trim(),
+      monto: Number(formularioEdicion.monto),
+      pago: formularioEdicion.pago,
+      modificadoEn: new Date().toISOString(),
+    });
+
+    setMesActivo(obtenerClaveMes(formularioEdicion.fecha));
     setGastoEditando(null);
   }
 
-  function eliminarGastoEditado() {
-    setGastos((prev) =>
-      prev.filter((gasto) => gasto.id !== gastoEditando.id)
-    );
+  async function eliminarGastoEditado() {
+    if (!gastoEditando) return;
 
+    await deleteDoc(doc(db, "gastos", gastoEditando.id));
     setGastoEditando(null);
   }
 
