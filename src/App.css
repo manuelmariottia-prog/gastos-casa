@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 :root {
   color-scheme: light;
@@ -678,5 +678,198 @@ textarea {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+}
+
+.menu-secciones {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.menu-secciones button {
+  border: none;
+  background: var(--card-soft);
+  color: var(--text);
+  padding: 12px 18px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.menu-secciones button.activa {
+  background: var(--green);
+  color: white;
+}
+
+.seccion-simple {
+  min-height: 300px;
+}
+
+.seccion-simple h2 {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.seccion-simple p {
+  color: var(--text-soft);
+}
+
+@media (max-width: 900px) {
+  .menu-secciones {
+    justify-content: center;
+  }
+
+  .menu-secciones button {
+    flex: 1;
+    min-width: 100%;
+  }
+}
+
+.hoja-supermercado {
+  background:
+    linear-gradient(90deg, rgba(216, 125, 125, 0.35) 36px, transparent 36px),
+    repeating-linear-gradient(
+      white 0px,
+      white 34px,
+      #dfeaf2 35px,
+      white 36px
+    );
+  border-radius: 28px;
+  padding: 32px;
+  min-height: 420px;
+}
+
+.formulario-supermercado {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.formulario-supermercado input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 16px;
+}
+
+.formulario-supermercado button {
+  border: none;
+  background: var(--green);
+  color: white;
+  padding: 14px 20px;
+  border-radius: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lista-supermercado {
+  list-style: none;
+  padding-left: 28px;
+}
+
+.lista-supermercado li {
+  font-family: 'Caveat', cursive;
+  font-size: 30px;
+  line-height: 36px;
+  color: #2d2d2d;
+}
+
+@media (max-width: 900px) {
+  .formulario-supermercado {
+    flex-direction: column;
+  }
+
+  .hoja-supermercado {
+    padding: 24px 18px 24px 42px;
+  }
+
+  .lista-supermercado li {
+    font-size: 26px;
+  }
+}
+
+.supermercado-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.boton-borrar-lista {
+  border: none;
+  background: #d98f8f;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lista-supermercado li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.circulo-compra {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #c9c9c9;
+  background: white;
+  color: var(--green-dark);
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.producto-comprado span {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.acciones-producto {
+  display: flex;
+  gap: 6px;
+}
+
+.acciones-producto button {
+  border: none;
+  background: var(--green);
+  color: white;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.acciones-producto button:last-child {
+  background: #d98f8f;
+}
+
+@media (max-width: 900px) {
+  .supermercado-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .lista-supermercado li {
+    grid-template-columns: 24px 1fr auto;
+    gap: 8px;
+  }
+
+  .acciones-producto button {
+    width: 24px;
+    height: 24px;
   }
 }

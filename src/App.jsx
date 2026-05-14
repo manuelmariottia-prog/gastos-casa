@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -31,6 +32,16 @@ const CATEGORIAS_INICIALES = [
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+];
+
+const PENDIENTES_BASE = [
+  "Alquiler",
+  "Expensas",
+  "Luz",
+  "Agua",
+  "Gas",
+  "Internet",
+  "Retributivos",
 ];
 
 function formatoMoneda(valor) {
@@ -61,6 +72,12 @@ function obtenerMesActual() {
 
 export default function App() {
   const [usuarioActivo, setUsuarioActivo] = useState("");
+  const [seccionActiva, setSeccionActiva] = useState("gastos");
+  const [productosSupermercado, setProductosSupermercado] = useState([]);
+const [nuevoProducto, setNuevoProducto] = useState("");
+const [pendientes, setPendientes] = useState([]);
+const [nuevoPendiente, setNuevoPendiente] = useState("");
+
   const [categorias, setCategorias] = useState(CATEGORIAS_INICIALES);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
   const [gastos, setGastos] = useState([]);
@@ -116,6 +133,55 @@ export default function App() {
 
     return () => cancelarEscucha();
   }, []);
+
+  useEffect(() => {
+  const q = query(collection(db, "supermercado"), orderBy("creadoEn", "desc"));
+
+  const cancelarEscucha = onSnapshot(q, (snapshot) => {
+    const productosFirebase = snapshot.docs.map((documento) => ({
+      id: documento.id,
+      ...documento.data(),
+    }));
+
+    setProductosSupermercado(productosFirebase);
+  });
+
+  return () => cancelarEscucha();
+}, []);
+
+useEffect(() => {
+  const q = query(collection(db, "pendientes"), orderBy("nombre", "asc"));
+
+  const cancelarEscucha = onSnapshot(q, (snapshot) => {
+    const pendientesFirebase = snapshot.docs.map((documento) => ({
+      id: documento.id,
+      ...documento.data(),
+    }));
+
+    setPendientes(pendientesFirebase);
+  });
+
+  return () => cancelarEscucha();
+}, []);
+
+useEffect(() => {
+  async function crearPendientesBase() {
+    const snapshot = await getDocs(collection(db, "pendientes"));
+
+    if (!snapshot.empty) return;
+
+    for (const nombre of PENDIENTES_BASE) {
+      await addDoc(collection(db, "pendientes"), {
+        nombre,
+        pagado: false,
+        mes: "todos",
+        creadoEn: new Date().toISOString(),
+      });
+    }
+  }
+
+  crearPendientesBase();
+}, []);
 
   const mesesDisponibles = useMemo(() => {
     const meses = gastos.map((gasto) => obtenerClaveMes(gasto.fecha));
@@ -270,6 +336,140 @@ export default function App() {
     setGastoEditando(null);
   }
 
+  async function agregarProductoSupermercado(e) {
+  e.preventDefault();
+
+  const productoLimpio = nuevoProducto.trim();
+
+  if (!productoLimpio) return;
+
+  await addDoc(collection(db, "supermercado"), {
+    nombre: productoLimpio,
+    comprado: false,
+    creadoPor: usuarioActivo,
+    creadoEn: new Date().toISOString(),
+  });
+
+  setNuevoProducto("");
+}
+
+async function marcarProductoComprado(producto) {
+  await updateDoc(doc(db, "supermercado", producto.id), {
+    comprado: !producto.comprado,
+  });
+}
+
+async function editarProductoSupermercado(producto) {
+  const nuevoNombre = prompt("Editar producto:", producto.nombre);
+
+  if (!nuevoNombre) return;
+
+  const nombreLimpio = nuevoNombre.trim();
+
+  if (!nombreLimpio) return;
+
+  await updateDoc(doc(db, "supermercado", producto.id), {
+    nombre: nombreLimpio,
+  });
+}
+
+async function borrarProductoSupermercado(producto) {
+  const confirmar = confirm(`¿Borrar "${producto.nombre}" de la lista?`);
+
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "supermercado", producto.id));
+}
+
+async function borrarListaSupermercadoCompleta() {
+  const confirmar = confirm(
+    "¿Seguro querés borrar toda la lista de supermercado?"
+  );
+
+  if (!confirmar) return;
+
+  const snapshot = await getDocs(collection(db, "supermercado"));
+
+  const borrados = snapshot.docs.map((documento) =>
+    deleteDoc(doc(db, "supermercado", documento.id))
+  );
+
+  await Promise.all(borrados);
+}
+
+async function agregarPendiente() {
+  const nombre = nuevoPendiente.trim();
+
+  if (!nombre) return;
+
+  const paraMesesSiguientes = confirm(
+    "Aceptar = agregar para este mes y los meses siguientes\nCancelar = solo este mes"
+  );
+
+  await addDoc(collection(db, "pendientes"), {
+    nombre,
+    pagado: false,
+    mes: paraMesesSiguientes ? "todos" : mesActivo,
+    desdeMes: paraMesesSiguientes ? mesActivo : null,
+    creadoEn: new Date().toISOString(),
+  });
+
+  setNuevoPendiente("");
+}
+
+async function togglePendiente(pendiente) {
+  if (pendiente.pagado) {
+    const confirmar = confirm(
+      `¿Marcar "${pendiente.nombre}" como NO pagado?`
+    );
+
+    if (!confirmar) return;
+  }
+
+  await updateDoc(doc(db, "pendientes", pendiente.id), {
+    pagado: !pendiente.pagado,
+  });
+}
+
+async function editarPendiente(pendiente) {
+  const nuevoNombre = prompt(
+    "Editar pendiente:",
+    pendiente.nombre
+  );
+
+  if (!nuevoNombre) return;
+
+  const nombreLimpio = nuevoNombre.trim();
+
+  if (!nombreLimpio) return;
+
+  await updateDoc(doc(db, "pendientes", pendiente.id), {
+    nombre: nombreLimpio,
+  });
+}
+
+async function borrarPendiente(pendiente) {
+  const confirmar = confirm(
+    `¿Borrar "${pendiente.nombre}"?`
+  );
+
+  if (!confirmar) return;
+
+  await deleteDoc(doc(db, "pendientes", pendiente.id));
+}
+
+const pendientesDelMes = pendientes.filter((pendiente) => {
+  if (pendiente.mes === mesActivo) return true;
+
+  if (pendiente.mes === "todos") {
+    if (!pendiente.desdeMes) return true;
+
+    return pendiente.desdeMes <= mesActivo;
+  }
+
+  return false;
+});
+
   if (!usuarioActivo) {
     return (
       <div className="login-page">
@@ -310,227 +510,391 @@ export default function App() {
         </button>
       </header>
 
-      <section className="tabs-meses">
-        {mesesDisponibles.map((mes) => (
-          <button
-            key={mes}
-            className={mesActivo === mes ? "tab-mes activa" : "tab-mes"}
-            onClick={() => setMesActivo(mes)}
-          >
-            {obtenerNombreMes(mes)}
-          </button>
-        ))}
-      </section>
+      <nav className="menu-secciones">
+        <button
+          className={seccionActiva === "gastos" ? "activa" : ""}
+          onClick={() => setSeccionActiva("gastos")}
+        >
+          Gastos
+        </button>
 
-      <section className="resumen-grid">
-        <div className="card">
-          <p>Total de {obtenerNombreMes(mesActivo)}</p>
-          <h2>{formatoMoneda(resumen.total)}</h2>
-        </div>
+        <button
+          className={seccionActiva === "supermercado" ? "activa" : ""}
+          onClick={() => setSeccionActiva("supermercado")}
+        >
+          Lista de supermercado
+        </button>
 
-        <div className="card">
-          <p>Manu</p>
-          <h2>{formatoMoneda(resumen.pagado.Manu)}</h2>
-        </div>
+        <button
+          className={seccionActiva === "pendientes" ? "activa" : ""}
+          onClick={() => setSeccionActiva("pendientes")}
+        >
+          Pendientes
+        </button>
+      </nav>
 
-        <div className="card destacada">
-          <p>Sofi</p>
-          <h2>{formatoMoneda(resumen.pagado.Sofi)}</h2>
-        </div>
-      </section>
-
-      <main className="main-grid">
-        <section className="card panel-formulario">
-          <h2>Agregar gasto</h2>
-
-          <form onSubmit={agregarGasto} className="formulario">
-            <label>
-              Fecha
-              <input
-                type="date"
-                name="fecha"
-                value={formulario.fecha}
-                onChange={cambiarFormulario}
-              />
-            </label>
-
-            <label>
-              Descripción
-              <select
-                name="descripcion"
-                value={formulario.descripcion}
-                onChange={cambiarFormulario}
+      {seccionActiva === "gastos" && (
+        <>
+          <section className="tabs-meses">
+            {mesesDisponibles.map((mes) => (
+              <button
+                key={mes}
+                className={mesActivo === mes ? "tab-mes activa" : "tab-mes"}
+                onClick={() => setMesActivo(mes)}
               >
-                {categorias.map((categoria) => (
-                  <option key={categoria} value={categoria}>
-                    {categoria}
-                  </option>
-                ))}
+                {obtenerNombreMes(mes)}
+              </button>
+            ))}
+          </section>
 
-                <option value="__nueva__">➕ Agregar nueva categoría</option>
-              </select>
-            </label>
+          <section className="resumen-grid">
+            <div className="card">
+              <p>Total de {obtenerNombreMes(mesActivo)}</p>
+              <h2>{formatoMoneda(resumen.total)}</h2>
+            </div>
 
-            {formulario.descripcion === "__nueva__" && (
-              <>
+            <div className="card">
+              <p>Manu</p>
+              <h2>{formatoMoneda(resumen.pagado.Manu)}</h2>
+            </div>
+
+            <div className="card destacada">
+              <p>Sofi</p>
+              <h2>{formatoMoneda(resumen.pagado.Sofi)}</h2>
+            </div>
+          </section>
+
+          <main className="main-grid">
+            <section className="card panel-formulario">
+              <h2>Agregar gasto</h2>
+
+              <form onSubmit={agregarGasto} className="formulario">
                 <label>
-                  Nueva categoría
+                  Fecha
                   <input
-                    type="text"
-                    value={nuevaCategoria}
-                    onChange={(e) => setNuevaCategoria(e.target.value)}
+                    type="date"
+                    name="fecha"
+                    value={formulario.fecha}
+                    onChange={cambiarFormulario}
                   />
                 </label>
 
-                <button type="button" onClick={agregarCategoria}>
-                  Guardar categoría
-                </button>
-              </>
-            )}
+                <label>
+                  Descripción
+                  <select
+                    name="descripcion"
+                    value={formulario.descripcion}
+                    onChange={cambiarFormulario}
+                  >
+                    {categorias.map((categoria) => (
+                      <option key={categoria} value={categoria}>
+                        {categoria}
+                      </option>
+                    ))}
 
-            <label>
-              Detalle opcional
-              <input
-                type="text"
-                name="detalle"
-                value={formulario.detalle}
-                onChange={cambiarFormulario}
-                placeholder="Ej: Coto, luz, gas..."
-              />
-            </label>
+                    <option value="__nueva__">➕ Agregar nueva categoría</option>
+                  </select>
+                </label>
 
-            <label>
-              Monto
-              <input
-                type="number"
-                name="monto"
-                value={formulario.monto}
-                onChange={cambiarFormulario}
-                placeholder="0"
-              />
-            </label>
+                {formulario.descripcion === "__nueva__" && (
+                  <>
+                    <label>
+                      Nueva categoría
+                      <input
+                        type="text"
+                        value={nuevaCategoria}
+                        onChange={(e) => setNuevaCategoria(e.target.value)}
+                      />
+                    </label>
 
-            <div className="usuario-carga">
-              Este gasto lo carga: <strong>{usuarioActivo}</strong>
-            </div>
+                    <button type="button" onClick={agregarCategoria}>
+                      Guardar categoría
+                    </button>
+                  </>
+                )}
 
-            <button type="submit">Guardar gasto</button>
-          </form>
-        </section>
+                <label>
+                  Detalle opcional
+                  <input
+                    type="text"
+                    name="detalle"
+                    value={formulario.detalle}
+                    onChange={cambiarFormulario}
+                    placeholder="Ej: Coto, luz, gas..."
+                  />
+                </label>
 
-        <section className="panel-derecho">
-          <div className="card">
-            <h2>Gráfico por categoría</h2>
+                <label>
+                  Monto
+                  <input
+                    type="number"
+                    name="monto"
+                    value={formulario.monto}
+                    onChange={cambiarFormulario}
+                    placeholder="0"
+                  />
+                </label>
 
-            {resumen.gastosPorCategoria.length === 0 ? (
-              <p className="texto-vacio">
-                Todavía no hay gastos cargados este mes.
-              </p>
-            ) : (
-              <div className="grafico-categorias">
-                {resumen.gastosPorCategoria.map((item) => (
-                  <div className="barra-item" key={item.categoria}>
-                    <div className="barra-info">
-                      <span>{item.categoria}</span>
-                      <strong>{formatoMoneda(item.total)}</strong>
+                <div className="usuario-carga">
+                  Este gasto lo carga: <strong>{usuarioActivo}</strong>
+                </div>
+
+                <button type="submit">Guardar gasto</button>
+              </form>
+            </section>
+
+            <section className="panel-derecho">
+              <div className="card">
+                <h2>Gráfico por categoría</h2>
+
+                {resumen.gastosPorCategoria.length === 0 ? (
+                  <p className="texto-vacio">
+                    Todavía no hay gastos cargados este mes.
+                  </p>
+                ) : (
+                  <div className="grafico-categorias">
+                    {resumen.gastosPorCategoria.map((item) => (
+                      <div className="barra-item" key={item.categoria}>
+                        <div className="barra-info">
+                          <span>{item.categoria}</span>
+                          <strong>{formatoMoneda(item.total)}</strong>
+                        </div>
+
+                        <div className="barra-fondo">
+                          <div
+                            className="barra-relleno"
+                            style={{
+                              width: `${
+                                resumen.total
+                                  ? (item.total / resumen.total) * 100
+                                  : 0
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="card listado-card">
+                <div className="listado-header">
+                  <div>
+                    <h2>Listado de gastos</h2>
+
+                    <p>
+                      {gastosDelMes.length} gastos cargados en{" "}
+                      {obtenerNombreMes(mesActivo)}
+                    </p>
+                  </div>
+                </div>
+
+                {gastosDelMes.length === 0 ? (
+                  <p className="texto-vacio">
+                    No hay gastos cargados para este mes.
+                  </p>
+                ) : (
+                  <div className="listado-columnas">
+                    <div className="columna-gasto">
+                      <h3>Fecha</h3>
+                      {gastosDelMes.map((gasto) => (
+                        <p key={`fecha-${gasto.id}`}>
+                          {formatoFecha(gasto.fecha)}
+                        </p>
+                      ))}
                     </div>
 
-                    <div className="barra-fondo">
-                      <div
-                        className="barra-relleno"
-                        style={{
-                          width: `${
-                            resumen.total
-                              ? (item.total / resumen.total) * 100
-                              : 0
-                          }%`,
-                        }}
-                      />
+                    <div className="columna-gasto">
+                      <h3>Descripción</h3>
+                      {gastosDelMes.map((gasto) => (
+                        <p key={`descripcion-${gasto.id}`}>
+                          {gasto.descripcion}
+                        </p>
+                      ))}
+                    </div>
+
+                    <div className="columna-gasto columna-detalle">
+                      <h3>Detalle</h3>
+                      {gastosDelMes.map((gasto) => (
+                        <p key={`detalle-${gasto.id}`}>
+                          {gasto.detalle || "-"}
+                        </p>
+                      ))}
+                    </div>
+
+                    <div className="columna-gasto">
+                      <h3>Pagó</h3>
+                      {gastosDelMes.map((gasto) => (
+                        <p key={`pago-${gasto.id}`}>{gasto.pago}</p>
+                      ))}
+                    </div>
+
+                    <div className="columna-gasto">
+                      <h3>Monto</h3>
+                      {gastosDelMes.map((gasto) => (
+                        <p key={`monto-${gasto.id}`}>
+                          {formatoMoneda(gasto.monto)}
+                        </p>
+                      ))}
+                    </div>
+
+                    <div className="columna-gasto columna-editar">
+                      <h3>Editar</h3>
+                      {gastosDelMes.map((gasto) => (
+                        <button
+                          key={`editar-${gasto.id}`}
+                          className="boton-editar-tabla"
+                          onClick={() => abrirEdicion(gasto)}
+                        >
+                          ✎
+                        </button>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
+            </section>
+          </main>
+        </>
+      )}
 
-          <div className="card listado-card">
-            <div className="listado-header">
-              <div>
-                <h2>Listado de gastos</h2>
+    {seccionActiva === "supermercado" && (
+  <section className="card hoja-supermercado">
+    <div className="supermercado-header">
+      <h2>Lista de supermercado</h2>
 
-                <p>
-                  {gastosDelMes.length} gastos cargados en{" "}
-                  {obtenerNombreMes(mesActivo)}
-                </p>
-              </div>
+      {productosSupermercado.length > 0 && (
+        <button
+          className="boton-borrar-lista"
+          onClick={borrarListaSupermercadoCompleta}
+        >
+          Borrar lista
+        </button>
+      )}
+    </div>
+
+    <form
+      className="formulario-supermercado"
+      onSubmit={agregarProductoSupermercado}
+    >
+      <input
+        type="text"
+        value={nuevoProducto}
+        onChange={(e) => setNuevoProducto(e.target.value)}
+        placeholder="Agregar producto..."
+      />
+
+      <button type="submit">Agregar</button>
+    </form>
+
+    {productosSupermercado.length === 0 ? (
+      <p className="texto-vacio">Todavía no hay productos cargados.</p>
+    ) : (
+      <ul className="lista-supermercado">
+        {productosSupermercado.map((producto) => (
+          <li
+            key={producto.id}
+            className={producto.comprado ? "producto-comprado" : ""}
+          >
+            <button
+              className="circulo-compra"
+              onClick={() => marcarProductoComprado(producto)}
+              type="button"
+            >
+              {producto.comprado ? "✓" : ""}
+            </button>
+
+            <span>{producto.nombre}</span>
+
+            <div className="acciones-producto">
+              <button
+                type="button"
+                onClick={() => editarProductoSupermercado(producto)}
+              >
+                ✎
+              </button>
+
+              <button
+                type="button"
+                onClick={() => borrarProductoSupermercado(producto)}
+              >
+                ×
+              </button>
             </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+)}
 
-            {gastosDelMes.length === 0 ? (
-              <p className="texto-vacio">
-                No hay gastos cargados para este mes.
-              </p>
-            ) : (
-              <div className="listado-columnas">
-                <div className="columna-gasto">
-                  <h3>Fecha</h3>
-                  {gastosDelMes.map((gasto) => (
-                    <p key={`fecha-${gasto.id}`}>
-                      {formatoFecha(gasto.fecha)}
-                    </p>
-                  ))}
-                </div>
+      {seccionActiva === "pendientes" && (
+  <section className="card hoja-supermercado">
+    <section className="tabs-meses">
+  {mesesDisponibles.map((mes) => (
+    <button
+      key={mes}
+      className={mesActivo === mes ? "tab-mes activa" : "tab-mes"}
+      onClick={() => setMesActivo(mes)}
+    >
+      {obtenerNombreMes(mes)}
+    </button>
+  ))}
+</section>
+    <div className="supermercado-header">
+      <h2>Pendientes de pago</h2>
+    </div>
 
-                <div className="columna-gasto">
-                  <h3>Descripción</h3>
-                  {gastosDelMes.map((gasto) => (
-                    <p key={`descripcion-${gasto.id}`}>
-                      {gasto.descripcion}
-                    </p>
-                  ))}
-                </div>
+    <div className="formulario-supermercado">
+      <input
+        type="text"
+        value={nuevoPendiente}
+        onChange={(e) => setNuevoPendiente(e.target.value)}
+        placeholder="Agregar pendiente..."
+      />
 
-                <div className="columna-gasto columna-detalle">
-                  <h3>Detalle</h3>
-                  {gastosDelMes.map((gasto) => (
-                    <p key={`detalle-${gasto.id}`}>
-                      {gasto.detalle || "-"}
-                    </p>
-                  ))}
-                </div>
+      <button onClick={agregarPendiente}>
+        Agregar
+      </button>
+    </div>
 
-                <div className="columna-gasto">
-                  <h3>Pagó</h3>
-                  {gastosDelMes.map((gasto) => (
-                    <p key={`pago-${gasto.id}`}>{gasto.pago}</p>
-                  ))}
-                </div>
+    <ul className="lista-supermercado">
+      {pendientesDelMes.map((pendiente) => (
+        <li
+          key={pendiente.id}
+          className={pendiente.pagado ? "producto-comprado" : ""}
+        >
+          <button
+            className="circulo-compra"
+            type="button"
+            onClick={() => togglePendiente(pendiente)}
+          >
+            {pendiente.pagado ? "✓" : ""}
+          </button>
 
-                <div className="columna-gasto">
-                  <h3>Monto</h3>
-                  {gastosDelMes.map((gasto) => (
-                    <p key={`monto-${gasto.id}`}>
-                      {formatoMoneda(gasto.monto)}
-                    </p>
-                  ))}
-                </div>
+          <span>{pendiente.nombre}</span>
 
-                <div className="columna-gasto columna-editar">
-                  <h3>Editar</h3>
-                  {gastosDelMes.map((gasto) => (
-                    <button
-                      key={`editar-${gasto.id}`}
-                      className="boton-editar-tabla"
-                      onClick={() => abrirEdicion(gasto)}
-                    >
-                      ✎
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+          <div className="acciones-producto">
+            <button
+              type="button"
+              onClick={() => editarPendiente(pendiente)}
+            >
+              ✎
+            </button>
+
+            <button
+              type="button"
+              onClick={() => borrarPendiente(pendiente)}
+            >
+              ×
+            </button>
           </div>
-        </section>
-      </main>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
 
       {gastoEditando && (
         <div className="modal-fondo">
