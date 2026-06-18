@@ -100,19 +100,27 @@ const [nuevoPendiente, setNuevoPendiente] = useState("");
   });
 
   useEffect(() => {
-    const q = query(collection(db, "gastos"), orderBy("fecha", "desc"));
+  const q = collection(db, "gastos");
 
-    const cancelarEscucha = onSnapshot(q, (snapshot) => {
+  const cancelarEscucha = onSnapshot(
+    q,
+    (snapshot) => {
       const gastosFirebase = snapshot.docs.map((documento) => ({
         id: documento.id,
         ...documento.data(),
       }));
 
-      setGastos(gastosFirebase);
-    });
+      console.log("Gastos cargados desde Firebase:", gastosFirebase);
 
-    return () => cancelarEscucha();
-  }, []);
+      setGastos(gastosFirebase);
+    },
+    (error) => {
+      console.error("Error leyendo gastos:", error);
+    }
+  );
+
+  return () => cancelarEscucha();
+}, []);
 
   useEffect(() => {
     const referenciaCategorias = doc(db, "configuracion", "categorias");
